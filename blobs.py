@@ -28,7 +28,7 @@ def init_objects():
     obj_velocity        = np.zeros(VELOCITY_SHAPE, dtype=float)
     obj_acceleration    = np.zeros(VELOCITY_SHAPE, dtype=float)
     for i in range(objects):
-        orbit_radius = 10 + (50 * np.random.rand() ) 
+        orbit_radius = 50 + (50 * np.random.rand() ) 
         angle = 2*3.1465 * np.random.rand()
         vel = 10 * np.random.rand()
         obj_velocity[i][0] = vel * np.sin(angle)
@@ -43,7 +43,7 @@ def init_objects():
         
     obj_position[0][0] = 0.0
     obj_position[0][1] = 0.0
-    obj_radius[0] = 4
+    obj_radius[0] = 40
     obj_mass[0] = obj_radius[0] * obj_radius[0]
     obj_velocity[0][0] = 0.0
     obj_velocity[0][1] = 0.0
@@ -71,14 +71,21 @@ def force_on_object_i(i):
             direction = object_position[j] - object_position[i]
             direction_magnitude = np.sqrt(direction[0]**2 + direction[1]**2)
             if ( direction_magnitude < ( object_radius[i] + object_radius[j] )  ):
-                print(f"Join {i} {j} radius before: {object_radius[i]}, {object_radius[j]}")
+                if i==0:
+                    print("the sun")
+                print(f"Join {i} {j} {direction_magnitude} {direction} radius before: {object_radius[i]}, {object_radius[j]} velocity before {object_velocity[i]} {object_velocity[j]}")
                 object_radius[i] = np.sqrt(object_radius[i]**2 + object_radius[j]**2)
+                object_velocity[i] = object_velocity[i] + ( object_velocity[j] / (  object_mass[j] + object_mass[i] )  )
+
                 object_mass[i] = object_mass[i] + object_mass[j]
                 object_radius[j] = -1
                 object_mass[j] = 0.000001
                 object_position[j][0] = 99999 + ( 9999 * np.random.rand() )
                 object_position[j][1] = 99999 + ( 9999 * np.random.rand() )
-                print(f"Join {i} {j} radius after: {object_radius[i]}, {object_radius[j]}")
+                object_velocity[j][0] = 0
+                object_velocity[j][1] = 0
+                
+                print(f"Join {i} {j} radius after: {object_radius[i]}, {object_radius[j]} velocity after {object_velocity[i]}")
             else:
                 direction_normalised = direction / direction_magnitude
                 force = force + ( ( GRAVITY * object_mass[j] * object_mass[i] ) / direction_magnitude**2 ) * direction_normalised
@@ -95,7 +102,9 @@ VELOCITY_SHAPE = (MAX_OBJECTS,2)
 MASS_SHAPE = (MAX_OBJECTS,1)
 GRAVITY = 1.0
 
-fig = plt.figure()
+fig = plt.figure(figsize=[5, 5])
+ax = plt.axes([0.1, 0.1, 0.8, 0.8], xlim=(-100, 100), ylim=(-100, 100))
+points_whole_ax = 5 * 0.8 * 72
 
 time = 0.0
 object_position, object_radius, object_mass, object_velocity, object_acceleration = init_objects()
@@ -121,10 +130,17 @@ while time < MAX_TIME:
             if object_radius[i] > 0: 
                 x.append(object_new_position[i][0])
                 y.append(object_new_position[i][1])
-                s.append(10*np.sqrt(object_mass[i]))
+                radius = 40
+                radius = object_radius[i]
+   #             radius = 40
+                radius = 1
+                points_radius = 2 * radius / 1.0 * points_whole_ax 
+                points_radius = object_radius[i]
+                s.append(points_radius**2)
                 colors.append(i)
 
         xt.append(object_new_position[0][0])
+ 
         plt.scatter(x,y,s=s,c=colors)
         plt.xlim(-100, 100)
         plt.ylim(-100, 100)
